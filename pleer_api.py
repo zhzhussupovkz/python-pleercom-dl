@@ -93,9 +93,13 @@ class PleerApi:
             try:
                 for k, t in tracks.iteritems():
                     track_id = t.get('id')
+                    artist = t.get('artist').replace(' ', '_')
+                    name = t.get('track').replace(' ', '_')
+                    track_name = artist + '-' + name
                     link = self.get_download_link(track_id)
                     resp = urllib2.urlopen(link)
-                    filename = './'+ dir + '/' + link.split('/')[-1]
+                    ext = (link.split('/')[-1]).split('.')[-1]
+                    filename = './'+ dir + '/' + track_name + '.' + ext
                     if not os.path.exists(os.path.dirname(filename)):
                         os.makedirs(os.path.dirname(filename))
                     f = open(filename, "wb")

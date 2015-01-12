@@ -6,4 +6,4 @@ from pleer_api import PleerApi
 login = "login"
 password = "password"
 pleer = PleerApi(login, password)
-pleer.download(query='music', result=1)
+pleer.download(query="It's A Sin", result=1, quality='best')
