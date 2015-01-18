@@ -24,23 +24,23 @@
 # SOFTWARE.
 
 from pleer_api import PleerApi
-from optparse import OptionParser
+import argparse
 import datetime
 
 login = "your login"
 password = "your password"
 
-usage = "%prog [options]\n\n"
-usage += "Command-line tool for downloading music from https://www.pleer.com\n"
-usage += "Copyright (c) %s Zhussupov Zhassulan zhzhussupovkz@gmail.com\n" % datetime.datetime.now().year
-usage += "While using this program, get API login, password from https://www.pleer.com"
-option_parser = OptionParser(usage=usage, version="%prog 1.0")
-option_parser.add_option("-q", "--query", help = "search for music by search term", default = "music")
-option_parser.add_option("-d", "--dir", help = "folder, which will be downloaded music files", default = "music")
-option_parser.add_option("-p", "--page", help = "specify result page(index). starts from 1", default = 1)
-option_parser.add_option("-r", "--result", help = "number of tracks per page", default = 10)
-option_parser.add_option("-y", "--quality", help = "quality (all, bad, good, best)", default = "all")
-(options, args) = option_parser.parse_args()
+desc = "Command-line tool for downloading music from https://www.pleer.com\n"
+desc += "Copyright (c) %s Zhussupov Zhassulan zhzhussupovkz@gmail.com\n" % datetime.datetime.now().year
+desc += "While using this program, get API login, password from https://www.pleer.com"
 
+parser = argparse.ArgumentParser(description=desc)
+parser.add_argument("-q", "--query", help = "search for music by search term", default = "music")
+parser.add_argument("-d", "--dir", help = "folder, which will be downloaded music files", default = "music")
+parser.add_argument("-p", "--page", help = "specify result page(index). starts from 1", type = int, default = 1)
+parser.add_argument("-r", "--result", help = "number of tracks per page", type = int, default = 10)
+parser.add_argument("-y", "--quality", help = "track's quality", default = "all", choices = ['all', 'bad', 'good', 'best'])
+
+args = parser.parse_args()
 pleer = PleerApi(login, password)
-pleer.download(directory=options.dir, query=options.query, page=options.page, result=options.result, quality='best')
+pleer.download(directory=args.dir, query=args.query, page=args.page, result=args.result, quality=args.quality)

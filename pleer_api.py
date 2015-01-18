@@ -45,16 +45,17 @@ class PleerApi:
         req = urllib2.Request(url, data)
         req.add_header('Authorization', "Basic %s" % base64str)
         req.add_header('Host', 'api.pleer.com')
-        resp = urllib2.urlopen(req)
-        if resp.getcode() == 200:
-            page = json.loads(resp.read())
-            try:
+        try:
+            resp = urllib2.urlopen(req)
+            if resp.getcode() == 200:
+                page = json.loads(resp.read())
                 self.access_token = page.get('access_token')
                 resp.close()
-            except Exception, e:
-                print e
-        else:
-            print "Server response code: %s" % resp.getcode()
+            else:
+                print "Server response code: %s" % resp.getcode()
+        except Exception, e:
+            print "Error: unable to obtain access token"
+            exit()
 
     # send request to server
     def send_request(self, api_method, query):
@@ -96,24 +97,27 @@ class PleerApi:
         tracks = self.search(query=query, page=page, result=result, quality=quality)
         print "Found %s tracks for search query: %s" % (len(tracks), query)
         if len(tracks) > 0:
-            try:
-                for k, t in tracks.iteritems():
-                    track_id = t.get('id')
-                    artist = t.get('artist').replace(' ', '_')
-                    name = t.get('track').replace(' ', '_')
-                    track_name = artist + '-' + name
-                    link = self.get_download_link(track_id)
+            for k, t in tracks.iteritems():
+                track_id = t.get('id')
+                artist = t.get('artist').replace(' ', '_')
+                name = t.get('track').replace(' ', '_')
+                track_name = artist + '-' + name
+                link = self.get_download_link(track_id)
+                try:
                     resp = urllib2.urlopen(link)
-                    ext = (link.split('/')[-1]).split('.')[-1]
-                    filename = './'+ directory + '/' + track_name + '.' + ext
-                    if not os.path.exists(os.path.dirname(filename)):
-                        os.makedirs(os.path.dirname(filename))
-                    size = resp.info().getheaders('Content-Length')[0]
-                    print "Starting downloading track: %s.%s. Size: %s bytes" % (track_name, ext, size)
-                    f = open(filename, "wb")
-                    f.write(resp.read())
-                    f.close()
-                    print "Track %s: OK" % filename
-            except Exception, e:
-                print "Error when downloading tracks"
-                print e
+                    if resp.getcode() == 200:
+                        ext = (link.split('/')[-1]).split('.')[-1]
+                        filename = './'+ directory + '/' + track_name + '.' + ext
+                        if not os.path.exists(os.path.dirname(filename)):
+                            os.makedirs(os.path.dirname(filename))
+                        size = resp.info().getheaders('Content-Length')[0]
+                        print "Starting downloading track: %s.%s. Size: %s bytes" % (track_name, ext, size)
+                        f = open(filename, "wb")
+                        f.write(resp.read())
+                        f.close()
+                        print "Track %s: OK" % filename
+                    else:
+                        print "Track %s: NOK. Server response code: %s" % (filename, resp.getcode())
+                except:
+                    print "Cannot download track %s: NOK." % filename
+                    pass
