@@ -26,6 +26,7 @@ import urllib2
 import json
 import base64
 import os
+import sys
 import time
 
 class PleerApi:
@@ -95,7 +96,7 @@ class PleerApi:
     # download track
     def download(self, directory = 'music', query = 'music', page = 1, result = 10, quality = 'all'):
         tracks = self.search(query=query, page=page, result=result, quality=quality)
-        print "Found %s tracks for search query: %s" % (len(tracks), query)
+        print "Found {0} tracks for search query: {1}".format(len(tracks), query)
         if len(tracks) > 0:
             for k, t in tracks.iteritems():
                 track_id = t.get('id')
@@ -103,21 +104,33 @@ class PleerApi:
                 name = t.get('track').replace(' ', '_')
                 track_name = artist + '-' + name
                 link = self.get_download_link(track_id)
+                ext = (link.split('/')[-1]).split('.')[-1]
+                filename = './'+ directory + '/' + track_name + '.' + ext
                 try:
                     resp = urllib2.urlopen(link)
                     if resp.getcode() == 200:
-                        ext = (link.split('/')[-1]).split('.')[-1]
-                        filename = './'+ directory + '/' + track_name + '.' + ext
                         if not os.path.exists(os.path.dirname(filename)):
                             os.makedirs(os.path.dirname(filename))
                         size = resp.info().getheaders('Content-Length')[0]
-                        print "Starting downloading track: %s.%s. Size: %s bytes" % (track_name, ext, size)
+                        print "Starting downloading track: {0}.{1}. Size: {2} bytes".format(track_name, ext, size)
                         f = open(filename, "wb")
-                        f.write(resp.read())
+                        downloaded = 0
+                        block = 1024
+                        while True:
+                            buffer = resp.read(block)
+                            if not buffer:
+                                break
+                            downloaded += len(buffer)
+                            f.write(buffer)
+                            p = float(downloaded) / int(size)
+                            status = r"{0}  [{1:.2%}]".format(downloaded, p)
+                            status = status + chr(8)*(len(status)+1)
+                            sys.stdout.write(status)
                         f.close()
-                        print "Track %s: OK" % filename
+                        print "Track {0}: OK".format(filename)
                     else:
-                        print "Track %s: NOK. Server response code: %s" % (filename, resp.getcode())
-                except:
-                    print "Cannot download track %s: NOK." % filename
+                        print "Track {0}: NOK. Server response code: {1}".format(filename, resp.getcode())
+                except Exception, e:
+                    print e
+                    print "Cannot download track {0}: NOK".format(filename)
                     pass
