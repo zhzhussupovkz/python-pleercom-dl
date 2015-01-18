@@ -92,13 +92,11 @@ class PleerApi:
             return json.get('url')
 
     # download track
-    def download(self, dir = 'music', query = 'music', page = 1, result = 10, quality = 'all'):
+    def download(self, directory = 'music', query = 'music', page = 1, result = 10, quality = 'all'):
         tracks = self.search(query=query, page=page, result=result, quality=quality)
         print "Found %s tracks for search query: %s" % (len(tracks), query)
         if len(tracks) > 0:
             try:
-                if not os.path.exists(os.path.dirname(dir)):
-                    os.makedirs(os.path.dirname(dir))
                 for k, t in tracks.iteritems():
                     track_id = t.get('id')
                     artist = t.get('artist').replace(' ', '_')
@@ -107,7 +105,11 @@ class PleerApi:
                     link = self.get_download_link(track_id)
                     resp = urllib2.urlopen(link)
                     ext = (link.split('/')[-1]).split('.')[-1]
-                    filename = './'+ dir + '/' + track_name + '.' + ext
+                    filename = './'+ directory + '/' + track_name + '.' + ext
+                    if not os.path.exists(os.path.dirname(filename)):
+                        os.makedirs(os.path.dirname(filename))
+                    size = resp.info().getheaders('Content-Length')[0]
+                    print "Starting downloading track: %s.%s. Size: %s bytes" % (track_name, ext, size)
                     f = open(filename, "wb")
                     f.write(resp.read())
                     f.close()

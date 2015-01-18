@@ -43,4 +43,4 @@ option_parser.add_option("-y", "--quality", help = "quality (all, bad, good, bes
 (options, args) = option_parser.parse_args()
 
 pleer = PleerApi(login, password)
-pleer.download(dir=options.dir, query=options.query, page=options.page, result=options.result, quality='best')
+pleer.download(directory=options.dir, query=options.query, page=options.page, result=options.result, quality='best')
