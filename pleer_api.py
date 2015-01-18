@@ -46,12 +46,15 @@ class PleerApi:
         req.add_header('Authorization', "Basic %s" % base64str)
         req.add_header('Host', 'api.pleer.com')
         resp = urllib2.urlopen(req)
-        page = json.loads(resp.read())
-        try:
-            self.access_token = page.get('access_token')
-            resp.close()
-        except Exception, e:
-            print e
+        if resp.getcode() == 200:
+            page = json.loads(resp.read())
+            try:
+                self.access_token = page.get('access_token')
+                resp.close()
+            except Exception, e:
+                print e
+        else:
+            print "Server response code: %s" % resp.getcode()
 
     # send request to server
     def send_request(self, api_method, query):
@@ -63,13 +66,16 @@ class PleerApi:
         data = urllib.urlencode(query)
         req = urllib2.Request(self.api_url, data)
         resp = urllib2.urlopen(req)
-        try:
-            page = json.loads(resp.read())
-            resp.close()
-            return page
-        except:
-            resp.close()
-            return False
+        if resp.getcode() == 200:
+            try:
+                page = json.loads(resp.read())
+                resp.close()
+                return page
+            except:
+                resp.close()
+                return False
+        else:
+            print "Server response code: %s" % resp.getcode()
 
     # search track
     def search(self, query = 'music', page = 1, result = 10, quality = 'all'):
@@ -91,6 +97,8 @@ class PleerApi:
         print "Found %s tracks for search query: %s" % (len(tracks), query)
         if len(tracks) > 0:
             try:
+                if not os.path.exists(os.path.dirname(dir)):
+                    os.makedirs(os.path.dirname(dir))
                 for k, t in tracks.iteritems():
                     track_id = t.get('id')
                     artist = t.get('artist').replace(' ', '_')
@@ -100,8 +108,6 @@ class PleerApi:
                     resp = urllib2.urlopen(link)
                     ext = (link.split('/')[-1]).split('.')[-1]
                     filename = './'+ dir + '/' + track_name + '.' + ext
-                    if not os.path.exists(os.path.dirname(filename)):
-                        os.makedirs(os.path.dirname(filename))
                     f = open(filename, "wb")
                     f.write(resp.read())
                     f.close()

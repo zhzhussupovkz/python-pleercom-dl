@@ -27,8 +27,8 @@ from pleer_api import PleerApi
 from optparse import OptionParser
 import datetime
 
-login = "login"
-password = "password"
+login = "your login"
+password = "your password"
 
 usage = "%prog [options]\n\n"
 usage += "Command-line tool for downloading music from https://www.pleer.com\n"
